@@ -1,0 +1,25 @@
+#!/bin/bash
+savePath="/Volumes/Media/"
+echo what is your filename?
+read varinput
+
+filename="${varinput##*/}"
+testfilename="${filename%.*}"
+
+echo what is your length hour?
+read hours
+
+echo what is your length minutes?
+read minutes
+
+timeinseconds=$(( ($hours * 3600) + ($minutes * 60) ))
+
+estbitrate=$(( (20000/$timeinseconds) * 8 * 1024 ))
+echo Estimated Bitate is $estbitrate
+
+echo what is your bitrate?
+read bitrate
+
+ffmpeg -y -i $varinput -strict experimental -c:v libx264 -pix_fmt yuv420p -r 29.97 -s 1920x1080  -filter_complex "setsar=sar=1/1" -preset veryslow -tune film -profile high -x264opts "bitrate=$bitrate:bluray-compat=1:force-cfr=1:bframes=3:ref=4:no-weightb:b-pyramid=none:vbv-bufsize=25000:level=4.1:keyint=30:tff:min-keyint=1" -flags -cgop -sn -an -slices 4 -threads 0 -f h264 -aspect 16:9 $savePath$testfilename.m4v
+
+ffmpeg -i $varinput -c:a aac -b:a 192k -af loudnorm=-24:8:-1 -acodec pcm_s16le -ar 48000 -ac 2 $savePath$testfilename.wav
